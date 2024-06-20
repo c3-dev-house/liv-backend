@@ -15,7 +15,7 @@ const authenticate = async () => {
       });
       //console.log('Before login:', conn);
       await conn.login(salesforce.username, salesforce.password + salesforce.token);
-      //console.log('After login:', conn);
+      console.log('After login:', conn);
     } else if (salesforce.authFlow === 'oauth') {
       conn = new jsforce.Connection({
         oauth2: {
