@@ -1,5 +1,7 @@
 import { getProducts } from '../services/shopifyService.js';
+import { getOwnedProducts, getProductItems } from '../services/salesforceService.js';
 
+//fetches all products from shopify vendor
 export const getVendorProducts = async (req, res, next) => {
   const { vendor } = req.query;
 
@@ -24,6 +26,42 @@ export const getVendorProducts = async (req, res, next) => {
     res.json(transformedProducts);
   } catch (error) {
     console.error('Error fetching products:', error.message);
+    next(error);
+  }
+};
+
+//fetches products belonging to user from salesforce
+export const getUserOwnedProducts = async (req, res, next) => {
+  //const { beneficiaryId } = req.query;
+  const beneficiaryId = 'a01Ad00000Y05MAIAZ' //a01Ad00000Y05MAIAZ - grace, newZap - a01Ad00000XUnJdIAL
+
+  if (!beneficiaryId) {
+    return res.status(400).json({ error: 'Beneficiary ID is required' });
+  }
+
+  try {
+    console.log('pre get owned products');
+    const products = await getOwnedProducts(beneficiaryId);
+    console.log('post get owned products');
+    console.log('pre productItemsPromises');
+    const productItemsPromises = products.map(async (product) => {
+      const items = await getProductItems(product.Id);
+      return {
+        ...product,
+        items,
+      };
+    });
+    console.log('pre await');
+    const productsWithItems = await Promise.all(productItemsPromises);
+    console.log('post await');
+    console.log(productsWithItems);
+    res.json(productsWithItems);
+
+    //todo: filter product ids. then use to get items data and transform result
+
+
+  } catch (error) {
+    console.error('Error fetching user owned products:', error.message);
     next(error);
   }
 };
