@@ -34,18 +34,16 @@ export const getBeneficiarySales = async (req, res, next) => {
     const salesData = await salesforceRequest('GET', salesEndpoint);
     const totalSales = salesData.records.length > 0 ? salesData.records[0].totalSales : 0;
 
-    console.log('Sending request to Salesforce for bundle items...');
-    const bundleItemsQuery = `SELECT Bundle_Items__c FROM Clothing_Bundles__c WHERE Beneficiary__c='${userId}'`;
+    /// update this to current items object
+    console.log('Sending request to Salesforce for total quantity of bundle items...');
+    const bundleItemsQuery = `SELECT Quantity__c FROM Clothing_Items__c WHERE Clothing_Bundles_Id__c IN (SELECT Id FROM Clothing_Bundles__c WHERE Beneficiary__c='${userId}')`;
     const bundleItemsEndpoint = `/services/data/v52.0/query?q=${encodeURIComponent(bundleItemsQuery)}`;
     const bundleItemsData = await salesforceRequest('GET', bundleItemsEndpoint);
 
     let totalQuantity = 0;
 
     bundleItemsData.records.forEach(record => {
-      const bundleItems = JSON.parse(record.Bundle_Items__c).items;
-      bundleItems.forEach(item => {
-        totalQuantity += item.quantity;
-      });
+      totalQuantity += record.Quantity__c;
     });
 
     res.json({
