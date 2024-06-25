@@ -7,7 +7,7 @@ export const salesforce = {
   redirectUri: process.env.SALESFORCE_REDIRECT_URI,
   instanceUrl: process.env.SALESFORCE_INSTANCE_URL,
   loginUrl: process.env.SALESFORCE_LOGIN_URL,
-  authFlow: process.env.SALESFORCE_AUTH_FLOW || "username-password", // 'username-password' or 'oauth' - set in .env
+  authFlow: process.env.SALESFORCE_AUTH_FLOW, // 'username-password' or 'oauth' - set in .env
 };
 
 export const shopify = {
