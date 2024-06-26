@@ -8,8 +8,8 @@ let conn;
 
 const authenticateSalesforce = async () => {
     try {
-        const privateKeyPath = 'C:\\Convergenc3 Files\\LIV\\backend\\liv-backend\\liv-backend\\keyStore\\private.key';
-        const certificatePath = 'C:\\Convergenc3 Files\\LIV\\backend\\liv-backend\\liv-backend\\certificates\\server.crt';
+        const privateKeyPath = 'C:\\Convergenc3 Files\\LIV\\backend\\liv-backend\\liv-backend\\private.key';
+        const certificatePath = 'C:\\Convergenc3 Files\\LIV\\backend\\liv-backend\\liv-backend\\server.crt';
         const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
         const certificate = fs.readFileSync(certificatePath, 'utf8');
 
