@@ -92,4 +92,28 @@ const salesforceRequest = async (method, endpoint, data = null) => {
     }
 };
 
-export { authenticateSalesforce, salesforceRequest };
+const getOwnedProducts = async (beneficiaryId) => {
+  console.log('getOwnedProducts salesforce service triggered');
+  if (!conn || !conn.accessToken) {
+    await authenticateSalesforce();
+  }
+
+  const query = `SELECT Id, Name, Bundle_Items__c, Clothing_Bundle_Category__c, Bundle_Price__c, Standard__c, Sales_Status__c, Order_ID__c, Selling_Price__c, Profit__c, Sell_Date__c, Beneficiary__c, General_Customer__c, Warehouse_Location__c FROM Clothing_Bundles__c WHERE Beneficiary__c = '${beneficiaryId}'`;
+  const records = await conn.query(query);
+  return records.records;
+};
+
+const getProductItems = async (bundleId) => {
+  console.log('getProductItems salesforce service triggered');
+  if (!conn || !conn.accessToken) {
+    await authenticateSalesforce();
+  }
+  const query = `SELECT Id, Name, Quantity__c, Description__c, Sales_Price__c, CreatedDate, Clothing_Bundles_Id__c  FROM Clothing_Items__c WHERE Clothing_Bundles_Id__c = '${bundleId}'`;
+  const records = await conn.query(query);
+  console.log('records');
+  console.log(records);
+  return records.records;
+}
+
+
+export { authenticateSalesforce, salesforceRequest, getOwnedProducts, getProductItems};

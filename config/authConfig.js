@@ -13,4 +13,5 @@ export const salesforce = {
 export const shopify = {
   accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
   storeUrl: process.env.SHOPIFY_STORE_URL,
+  storeLocationId: process.env.SHOPIFY_STORE_LOCATION_ID
 };
