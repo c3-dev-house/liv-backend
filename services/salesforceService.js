@@ -1,100 +1,101 @@
 import jsforce from 'jsforce';
+import jwt from 'jsonwebtoken';
+import fs from 'fs';
 import axios from 'axios';
 import { salesforce } from '../config/authConfig.js';
+import { fileURLToPath } from 'url';
+import path, { dirname } from 'path';
 
 let conn;
 
-const authenticate = async () => {
-    console.log('authenticate triggered');
-    //console.log(salesforce.authFlow);
-  try {
-    if (salesforce.authFlow === 'username-password') {
-        console.log('authflow username-password');
-      conn = new jsforce.Connection({
-        loginUrl: salesforce.loginUrl
-      });
-      //console.log('Before login:', conn);
-      await conn.login(salesforce.username, salesforce.password + salesforce.token);
-      console.log('After login:', conn);
-    } else if (salesforce.authFlow === 'oauth') {
-      conn = new jsforce.Connection({
-        oauth2: {
-          clientId: salesforce.clientId,
-          clientSecret: salesforce.clientSecret,
-          redirectUri: salesforce.redirectUri
-        }
-      });
-      const response = await axios.post('https://login.salesforce.com/services/oauth2/token', {
-        grant_type: 'refresh_token',
-        client_id: salesforce.clientId,
-        client_secret: salesforce.clientSecret,
-        refresh_token: salesforce.refreshToken,
-      });
-      conn.accessToken = response.data.access_token;
-      conn.refreshToken = response.data.refresh_token; // Update the refresh token if it changes
-      conn.instanceUrl = response.data.instance_url; // Update instance URL if provided
+const authenticateSalesforce = async () => {
+    // Get the directory path of the current module file
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+
+    // Construct the path to your private key file
+    const privateKeyPath = path.resolve(__dirname, '../private.key');
+    
+    try {
+        const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+
+        const payload = {
+            iss: salesforce.clientId,
+            sub: salesforce.username,
+            aud: salesforce.loginUrl,
+            exp: Math.floor(Date.now() / 1000) + (60 * 10) // 10 minutes expiration
+        };
+
+        const token = jwt.sign(payload, privateKey, { algorithm: 'RS256' });
+
+        const response = await axios.post(`${salesforce.loginUrl}/services/oauth2/token`, null, {
+            params: {
+                grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                assertion: token
+            }
+        });
+
+        const accessToken = response.data.access_token;
+        console.log(`Access Token: ${accessToken}`);
+
+        conn = new jsforce.Connection({
+            instanceUrl: salesforce.instanceUrl,
+            accessToken: accessToken
+        });
+
+        console.log('JWT authentication successful:', conn.accessToken);
+    } catch (error) {
+        const errorMsg = error.response ? JSON.stringify(error.response.data, null, 2) : error.message;
+        throw new Error('Salesforce authentication failed: ' + errorMsg);
     }
-  } catch (error) {
-    throw new Error('Salesforce authentication failed: ' + error.message);
-  }
 };
 
 const salesforceRequest = async (method, endpoint, data = null) => {
-  if (!conn || !conn.accessToken) {
-    console.log('no conn reached');
-    await authenticate();
-  }
+    try {
+        if (!conn || !conn.accessToken) {
+            console.log('No connection reached, authenticating...');
+            await authenticateSalesforce();
+        }
 
-  try {
-    const instanceUrl = conn.instanceUrl || salesforce.instanceUrl;
-    console.log('Instance URL:', instanceUrl);
-    if (!instanceUrl) {
-      throw new Error('Instance URL is not available.');
+        const url = `${conn.instanceUrl}${endpoint}`;
+        const response = await axios({
+            method,
+            url,
+            headers: {
+                'Authorization': `Bearer ${conn.accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            data,
+        });
+
+        return response.data;
+    } catch (error) {
+        if (error.response && error.response.status === 401) {
+            // Re-authenticate if access token expired
+            await authenticateSalesforce();
+            // Retry the request
+            const url = `${conn.instanceUrl}${endpoint}`;
+            const response = await axios({
+                method,
+                url,
+                headers: {
+                    'Authorization': `Bearer ${conn.accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                data,
+            });
+            return response.data;
+        } else {
+            const errorMsg = error.response ? JSON.stringify(error.response.data, null, 2) : error.message;
+            throw new Error('Salesforce request failed: ' + errorMsg);
+        }
     }
-
-    const url = `${instanceUrl}${endpoint}`;
-    const response = await axios({
-      method,
-      url,
-      headers: {
-        'Authorization': `Bearer ${conn.accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      data,
-    });
-
-    return response.data;
-  } catch (error) {
-    if (error.response && error.response.status === 401) {
-      // Re-authenticate if access token expired
-      await authenticate();
-      // Retry the request
-      const instanceUrl = conn.instanceUrl || salesforce.instanceUrl;
-      if (!instanceUrl) {
-        throw new Error('Instance URL is not available.');
-      }
-
-      const url = `${instanceUrl}${endpoint}`;
-      const response = await axios({
-        method,
-        url,
-        headers: {
-          'Authorization': `Bearer ${conn.accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        data,
-      });
-      return response.data;
-    } else {
-      throw new Error('Salesforce request failed: ' + error.message);
-    }
-  }
 };
 
 const getOwnedProducts = async (beneficiaryId) => {
   console.log('getOwnedProducts salesforce service triggered');
   if (!conn || !conn.accessToken) {
-    await authenticate();
+    await authenticateSalesforce();
   }
 
   const query = `SELECT Id, Name, Bundle_Items__c, Clothing_Bundle_Category__c, Bundle_Price__c, Standard__c, Sales_Status__c, Order_ID__c, Selling_Price__c, Profit__c, Sell_Date__c, Beneficiary__c, General_Customer__c, Warehouse_Location__c FROM Clothing_Bundles__c WHERE Beneficiary__c = '${beneficiaryId}'`;
@@ -105,7 +106,7 @@ const getOwnedProducts = async (beneficiaryId) => {
 const getProductItems = async (bundleId) => {
   console.log('getProductItems salesforce service triggered');
   if (!conn || !conn.accessToken) {
-    await authenticate();
+    await authenticateSalesforce();
   }
   const query = `SELECT Id, Name, Quantity__c, Description__c, Sales_Price__c, CreatedDate, Clothing_Bundles_Id__c  FROM Clothing_Items__c WHERE Clothing_Bundles_Id__c = '${bundleId}'`;
   const records = await conn.query(query);
@@ -115,4 +116,4 @@ const getProductItems = async (bundleId) => {
 }
 
 
-export { authenticate, salesforceRequest, getOwnedProducts, getProductItems};
+export { authenticateSalesforce, salesforceRequest, getOwnedProducts, getProductItems};
