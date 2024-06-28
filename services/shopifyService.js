@@ -64,7 +64,7 @@ export const cancelOrder = async (orderId) => {
 };
 
 export const updateProductStatus = async (productId, status) => {
-  console.log("updateProductStatus reached");
+  console.log("updateProductStatus reached, productId:", productId);
   const response = await axios.put(
     `https://${shopify.storeUrl}/admin/api/2024-04/products/${productId}.json`,
     {
@@ -82,7 +82,7 @@ export const updateProductStatus = async (productId, status) => {
   return response.data;
 };
 
-//todo implement fulfillment services
+//todo implement fulfillment services - done
 
 
 export const createFulfillment = async (
@@ -123,4 +123,30 @@ export const getFulfillmentOrders = async (orderId) => {
 };
 
 
+export const getOrdersByCustomerId = async (customerId) => {
+  console.log("getOrdersByCustomerId service triggered");
+  const response = await axios.get(
+    `https://${shopify.storeUrl}/admin/api/2024-04/orders.json`,
+    {
+      headers: shopifyHeaders,
+      params: {
+        customer_id: customerId,
+        fields: "id,customer,id,fulfillment_status,financial_status,line_items,created_at",
+      },
+    }
+  );
+  console.log("response", response.data.orders);
+  return response.data.orders;
+};
 
+export const getOrderById = async (orderId) => {
+  console.log("getOrderById triggered", orderId);
+  const response = await axios.get(
+    `https://${shopify.storeUrl}/admin/api/2024-04/orders/${orderId}.json`,
+    {
+      headers: shopifyHeaders,
+    }
+  );
+  console.log("response", response.data.order);
+  return response.data.order;
+};

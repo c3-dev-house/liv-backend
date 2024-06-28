@@ -4,21 +4,24 @@ import {
   cancelOrder,
   updateProductStatus,
   createFulfillment,
-  getFulfillmentOrders
+  getFulfillmentOrders,
+  getOrdersByCustomerId,
+  getOrderById
+  
 } from "../services/shopifyService.js";
 
 //todo test all order controllers
 
 export const createOrder = async (req, res, next) => {
-  const { userId, variantIds, productIds } = req.body;
+  const { customerId, variantIds, productIds } = req.body;
   console.log("createOrder controller triggered");
   console.log("req.body:");
   console.log(req.body);
-  //const userId ='7024877994031' //todo find test user id, grace shopify id.
+  //const customerId ='7024877994031' //todo find test user id, grace shopify id.
   //const variantIds = ['42995584892975']; //42998797860911 //42998633070639 female teen clothing R200
 
   if (
-    !userId ||
+    !customerId ||
     !variantIds ||
     !Array.isArray(variantIds) ||
     variantIds.length === 0 ||
@@ -27,6 +30,8 @@ export const createOrder = async (req, res, next) => {
   ) {
     return res.status(400).json({ error: "Invalid request data" });
   }
+
+  //todo: check if reservations for week has reached it's limit. return amount of bundles that can still be reserved
 
   try {
     // Create the draft order for draftOrderResponse
@@ -37,7 +42,7 @@ export const createOrder = async (req, res, next) => {
           quantity: 1,
         })),
         customer: {
-          id: userId,
+          id: customerId,
         }
       },
     };
@@ -89,6 +94,7 @@ export const createOrder = async (req, res, next) => {
 
 export const cancelUserOrder = async (req, res, next) => {
   const { orderId, productIds  } = req.body;
+  console.log(productIds);
 
   if (!orderId) {
     return res.status(400).json({ error: "Order ID is required" });
@@ -107,6 +113,87 @@ export const cancelUserOrder = async (req, res, next) => {
       order: response.order,
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+export const getCustomerOrders = async (req, res, next) => {
+  const { customerId } = req.params;
+
+  if (!customerId) {
+    return res.status(400).json({ error: "Customer ID is required" });
+  }
+
+  try {
+    const orders = await getOrdersByCustomerId(customerId);
+    console.log("orders");
+    console.log(orders);
+    const filteredOrders = orders.filter(order => order.fulfillment_status === 'fulfilled' || 'null' && order.financial_status === 'pending');
+    const transformedOrders = filteredOrders.map(order => {
+      const formattedDate = new Date(order.created_at).toLocaleDateString('en-GB');
+      const formattedTime = new Date(order.created_at).toLocaleTimeString('en-GB');
+      
+      return {
+        id: order.id,
+        date:formattedDate,
+        time: formattedTime,
+        items: order.line_items.length,
+        products: order.line_items.map(item => {
+          
+          return {
+            id: item.product_id,
+            title: item.title,
+            price: parseFloat(item.price),
+            createdAt: formattedDate
+          };
+        }),
+        location: order.line_items.length > 0 ? order.line_items[0].vendor : 'N/A'
+      };
+    });
+
+
+    res.json({
+      success: true,
+      orders: transformedOrders,
+    });
+  } catch (error) {
+    console.error('Error fetching customer orders:', error.message);
+    next(error);
+  }
+};
+
+export const getCustomerOrderById = async (req, res, next) => {
+  const { orderId } = req.params;
+
+  if (!orderId) {
+    return res.status(400).json({ error: 'Order ID is required' });
+  }
+
+  try {
+    const order = await getOrderById(orderId); 
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const transformedOrder = {
+      id: order.id,
+      date: new Date(order.created_at).toLocaleDateString('en-GB'),
+      time: new Date(order.created_at).toLocaleTimeString('en-GB'),
+      items: order.line_items.length,
+      products: order.line_items.map(item => ({
+        id: item.product_id,
+        title: item.title,
+        price: parseFloat(item.price),
+        createdAt: new Date(order.created_at).toLocaleDateString('en-GB')
+
+      })),
+      location: order.line_items.length > 0 ? order.line_items[0].vendor : 'N/A'
+    };
+    console.log("transformedOrder");
+    console.log(transformedOrder);
+    res.json({ success: true, order: transformedOrder });
+  } catch (error) {
+    console.error('Error fetching order:', error.message);
     next(error);
   }
 };
