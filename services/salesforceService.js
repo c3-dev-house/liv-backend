@@ -9,6 +9,7 @@ import path, { dirname } from 'path';
 let conn;
 
 const authenticateSalesforce = async () => {
+    console.log("Authenticating");
     // Get the directory path of the current module file
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
@@ -36,14 +37,14 @@ const authenticateSalesforce = async () => {
         });
 
         const accessToken = response.data.access_token;
-        console.log(`Access Token: ${accessToken}`);
+        // console.log(`Access Token: ${accessToken}`);
 
         conn = new jsforce.Connection({
             instanceUrl: salesforce.instanceUrl,
             accessToken: accessToken
         });
-
-        console.log('JWT authentication successful:', conn.accessToken);
+        console.log('JWT authentication successful:')
+        // console.log('JWT authentication successful:', conn.accessToken);
     } catch (error) {
         const errorMsg = error.response ? JSON.stringify(error.response.data, null, 2) : error.message;
         throw new Error('Salesforce authentication failed: ' + errorMsg);
@@ -103,17 +104,96 @@ const getOwnedProducts = async (beneficiaryId) => {
   return records.records;
 };
 
+const getClothingBundleId = async (productId) => {
+    console.log('getClothingBundleId salesforce service triggered');
+    if (!conn || !conn.accessToken) {
+      await authenticateSalesforce();
+    }
+    const query = `SELECT Id, Name,Shopify_Product_Id__c  FROM Clothing_Bundles__c WHERE Shopify_Product_Id__c = '${productId}'`;
+    const records = await conn.query(query);
+    console.log('clothing bundles');
+    console.log(records.records[0].Id);
+    return records.records[0].Id;
+  }
+
 const getProductItems = async (bundleId) => {
   console.log('getProductItems salesforce service triggered');
   if (!conn || !conn.accessToken) {
     await authenticateSalesforce();
   }
-  const query = `SELECT Id, Name, Quantity__c, Description__c, Sales_Price__c, CreatedDate, Clothing_Bundles_Id__c  FROM Clothing_Items__c WHERE Clothing_Bundles_Id__c = '${bundleId}'`;
+  const query = `SELECT Id, Name, Quantity__c, Description__c, Sales_Price__c, CreatedDate, Clothing_Bundles_Id__c,Shopify_Product_Id__c  FROM Clothing_Items__c WHERE Shopify_Product_Id__c = '${bundleId}'`;
   const records = await conn.query(query);
   console.log('records');
   console.log(records);
   return records.records;
 }
 
+const deleteAllClothingItems = async () => {
+    console.log('Deleting all clothing items from Salesforce...');
+    if (!conn || !conn.accessToken) {
+        await authenticateSalesforce();
+    }
 
-export { authenticateSalesforce, salesforceRequest, getOwnedProducts, getProductItems};
+    try {
+        // Fetch all records to delete
+        const records = await conn.sobject('Clothing_Items__c').find({}, ['Id']);
+        const itemIds = records.map(record => record.Id);
+
+        // Ensure itemIds is an array
+        if (!Array.isArray(itemIds)) {
+            throw new Error('Item IDs must be provided as an array.');
+        }
+
+        // Delete records in batches
+        const batchSize = 200; // Adjust batch size based on Salesforce limits
+        const promises = [];
+        for (let i = 0; i < itemIds.length; i += batchSize) {
+            const batchIds = itemIds.slice(i, i + batchSize);
+            promises.push(conn.sobject('Clothing_Items__c').destroy(batchIds));
+        }
+
+        await Promise.all(promises);
+        console.log('All clothing items deleted successfully.');
+    } catch (error) {
+        console.error('Error deleting clothing items:', error);
+        throw error;
+    }
+};
+
+const deleteAllClothingBundles = async () => {
+    console.log('Deleting all clothing bundles from Salesforce...');
+    if (!conn || !conn.accessToken) {
+        await authenticateSalesforce();
+    }
+
+    try {
+        // Fetch all records to delete
+        const records = await conn.sobject('Clothing_Bundles__c').find({}, ['Id']);
+        const bundleIds = records.map(record => record.Id);
+
+        // Ensure bundleIds is an array
+        if (!Array.isArray(bundleIds)) {
+            throw new Error('Bundle IDs must be provided as an array.');
+        }
+
+        // Delete records in batches
+        const batchSize = 200; // Adjust batch size based on Salesforce limits
+        const promises = [];
+        for (let i = 0; i < bundleIds.length; i += batchSize) {
+            const batchIds = bundleIds.slice(i, i + batchSize);
+            promises.push(conn.sobject('Clothing_Bundles__c').destroy(batchIds));
+        }
+
+        await Promise.all(promises);
+        console.log('All clothing bundles deleted successfully.');
+    } catch (error) {
+        console.error('Error deleting clothing bundles:', error);
+        throw error;
+    }
+};
+
+
+
+
+
+export { authenticateSalesforce, salesforceRequest, getOwnedProducts, getProductItems,deleteAllClothingItems,deleteAllClothingBundles,getClothingBundleId};

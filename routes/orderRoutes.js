@@ -7,5 +7,4 @@ router.post('/create', createOrder);
 router.post('/cancel', cancelUserOrder);
 router.get('/customer-orders/:customerId', getCustomerOrders);
 router.get('/:orderId', getCustomerOrderById);
-
 export default router;
