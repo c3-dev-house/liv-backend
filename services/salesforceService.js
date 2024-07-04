@@ -16,6 +16,7 @@ const setSalesforceConnection = (accessToken, instanceUrl) => {
   });
 };
 
+
 //used to get username-password auth object
 const authenticateLoginSalesforce = async () => {
   try {
@@ -165,16 +166,22 @@ const getUserFromSalesforce = async (username, password) => {
     }
 
     const user = response.records[0];
+    console.log("User found:", user);
+    console.log(salesforce.dummyPasswordHash);
+  
 
-     // Compare provided password with stored hashed password or dummy password hash
-     const isPasswordValid = await bcrypt.compare(password, user.Password_Hash__c || salesforce.dummyPasswordHash);
+
+     // Compare provided password with stored hashed password or dummy password hash 
+     const isPasswordValid = await bcrypt.compare(password, user.Password_Hash__c);
+     console.log("Password valid:", isPasswordValid);
+     const needsPasswordReset = isPasswordValid && !user.isPasswordReset__c;
      if (!isPasswordValid) {
-       return null;
-     }
+      return null;
+    }
  
-     // Check if the user is using the dummy password and hasn't reset it yet
-     const needsPasswordReset = await bcrypt.compare(password, salesforce.dummyPasswordHash) && !user.isPasswordReset__c;
- 
+     // Check if the user is using the dummy password and hasn't reset it yet - removed, hash will be same even if dummy pw is supplied.. 
+     //const needsPasswordReset = await bcrypt.compare(password, salesforce.dummyPasswordHash) && !user.isPasswordReset__c;
+     //console.log("needsPasswordReset:", needsPasswordReset);
      return { ...user, needsPasswordReset };
   } catch (error) {
     throw new Error("Failed to fetch user from Salesforce: " + error.message);

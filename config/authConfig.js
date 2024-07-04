@@ -8,7 +8,8 @@ export const salesforce = {
   instanceUrl: process.env.SALESFORCE_INSTANCE_URL,
   loginUrl: process.env.SALESFORCE_LOGIN_URL,
   authFlow: process.env.SALESFORCE_AUTH_FLOW, // 'username-password' or 'oauth' - set in .env
-  dummyPasswordHash: process.env.DUMMY_PASSWORD_HASH
+  dummyPasswordHash: process.env.DUMMY_PASSWORD_HASH,
+  fixedSalt: process.env.FIXED_SALT
 };
 
 export const shopify = {
