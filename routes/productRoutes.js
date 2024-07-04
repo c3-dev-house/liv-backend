@@ -4,6 +4,7 @@ import { getVendorProducts, getUserOwnedProducts } from '../controllers/productC
 const router = express.Router();
 
 router.get('/vendor-products', getVendorProducts); //fetches all products from vendor (calls getProducts Shopify service)
-router.get('/owned-products', getUserOwnedProducts); //fetches all owned products (calls getUserOwnedProducts Salesforce service)
+router.get('/owned-products', getUserOwnedProducts); //fetches all owned products (calls getUserOwnedProducts Shopify service)
+
 
 export default router;

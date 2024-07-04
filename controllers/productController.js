@@ -1,5 +1,5 @@
-import { getProducts } from '../services/shopifyService.js';
-import { getOwnedProducts, getProductItems } from '../services/salesforceService.js';
+import { getBeneficiaryProducts, getProducts } from '../services/shopifyService.js';
+import { getOwnedProducts, getProductItems, getClothingBundleId } from '../services/salesforceService.js';
 
 //fetches all products from shopify vendor
 export const getVendorProducts = async (req, res, next) => {
@@ -33,28 +33,31 @@ export const getVendorProducts = async (req, res, next) => {
 //fetches products belonging to user from salesforce
 export const getUserOwnedProducts = async (req, res, next) => {
   //const { beneficiaryId } = req.query;
-  const beneficiaryId = 'a01Ad00000Y05MAIAZ' //a01Ad00000Y05MAIAZ - grace, newZap - a01Ad00000XUnJdIAL
+  const customerId = '7024877994031' //a01Ad00000Y05MAIAZ - grace, newZap - a01Ad00000XUnJdIAL
 
-  if (!beneficiaryId) {
+  if (!customerId) {
     return res.status(400).json({ error: 'Beneficiary ID is required' });
   }
 
   try {
-    console.log('pre get owned products');
-    const products = await getOwnedProducts(beneficiaryId);
-    console.log('post get owned products');
-    console.log('pre productItemsPromises');
+    // console.log('pre get owned products');
+    const products = await getBeneficiaryProducts(customerId);  //Call shopify service to fetch orders
+    // console.log('post get owned products');
+    // console.log("ProductsAll",products)
     const productItemsPromises = products.map(async (product) => {
-      const items = await getProductItems(product.Id);
+      // console.log("Product",product)
+      const items = await getProductItems(product.id);
+      const clothingBundlesId = await getClothingBundleId(product.id);
       return {
         ...product,
         items,
+        clothingBundlesId
       };
     });
-    console.log('pre await');
+    // console.log('pre await');
     const productsWithItems = await Promise.all(productItemsPromises);
-    console.log('post await');
-    console.log(productsWithItems);
+    // console.log('post await');
+
     res.json(productsWithItems);
 
     //todo: filter product ids. then use to get items data and transform result

@@ -22,6 +22,60 @@ export const getProducts = async (vendor) => {
   return response.data.products;
 };
 
+export const getBeneficiaryProducts = async (customerId) => {
+  if (!customerId) {
+    throw new Error("Customer ID is required");
+  }
+
+  try {
+    const purchases = await getOrdersByCustomerId(customerId);
+    console.log("purchases", purchases);
+
+    const filteredSales = purchases.filter(sale => sale.financial_status === 'paid');
+    const transformedSales = filteredSales.map(sale => {
+      const formattedDate = new Date(sale.created_at).toLocaleDateString('en-GB');
+      const formattedTime = new Date(sale.created_at).toLocaleTimeString('en-GB');
+
+      return {
+        id: sale.id,
+        date: formattedDate,
+        time: formattedTime,
+        items: sale.line_items.length,
+        products: sale.line_items.map(item => ({
+          id: item.product_id,
+          title: item.title,
+          price: parseFloat(item.price),
+          createdAt: formattedDate,
+        })),
+        location: sale.line_items.length > 0 ? sale.line_items[0].vendor : 'N/A',
+      };
+    });
+    console.log("transformedSales:", transformedSales);
+
+    const productsArray = (transformedSales || [])
+      .flatMap(order =>
+        order.products.map(product => ({
+          id: product.id,
+          date: order.date,
+          time: order.time,
+          title: product.title,
+          price: product.price,
+          location:order.location
+        }))
+      );
+
+    console.log("Products Array:", productsArray);
+    console.log("First Product", transformedSales[0].products[0]);
+    console.log("Products Array:", productsArray);
+    console.log("Products", transformedSales[0].products[0])
+    return productsArray;
+
+  } catch (error) {
+    console.error('Error fetching customer purchases:', error.message);
+    throw error;
+  }
+};
+
 export const createDraftOrder = async (data) => {
   console.log("create draft order triggered");
   const response = await axios.post(
