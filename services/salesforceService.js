@@ -16,7 +16,6 @@ const setSalesforceConnection = (accessToken, instanceUrl) => {
   });
 };
 
-
 //used to get username-password auth object
 const authenticateLoginSalesforce = async () => {
   try {
@@ -155,7 +154,7 @@ const getUserFromSalesforce = async (username, password) => {
     );
   }
   try {
-    const query = `SELECT Id, Username__c, Password_Hash__c, isPasswordReset__c, Shopify_Id__c FROM Beneficiary__c WHERE Username__c = '${username}'`; 
+    const query = `SELECT Id, Username__c, Password_Hash__c, isPasswordReset__c, Shopify_Id__c FROM Beneficiary__c WHERE Username__c = '${username}'`;
     const response = await salesforceRequest(
       "GET",
       `/services/data/v50.0/query?q=${encodeURIComponent(query)}`
@@ -168,21 +167,22 @@ const getUserFromSalesforce = async (username, password) => {
     const user = response.records[0];
     console.log("User found:", user);
     console.log(salesforce.dummyPasswordHash);
-  
 
-
-     // Compare provided password with stored hashed password or dummy password hash 
-     const isPasswordValid = await bcrypt.compare(password, user.Password_Hash__c);
-     console.log("Password valid:", isPasswordValid);
-     const needsPasswordReset = isPasswordValid && !user.isPasswordReset__c;
-     if (!isPasswordValid) {
+    // Compare provided password with stored hashed password or dummy password hash
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.Password_Hash__c
+    );
+    console.log("Password valid:", isPasswordValid);
+    const needsPasswordReset = isPasswordValid && !user.isPasswordReset__c;
+    if (!isPasswordValid) {
       return null;
     }
- 
-     // Check if the user is using the dummy password and hasn't reset it yet - removed, hash will be same even if dummy pw is supplied.. 
-     //const needsPasswordReset = await bcrypt.compare(password, salesforce.dummyPasswordHash) && !user.isPasswordReset__c;
-     //console.log("needsPasswordReset:", needsPasswordReset);
-     return { ...user, needsPasswordReset };
+
+    // Check if the user is using the dummy password and hasn't reset it yet - removed, hash will be same even if dummy pw is supplied..
+    //const needsPasswordReset = await bcrypt.compare(password, salesforce.dummyPasswordHash) && !user.isPasswordReset__c;
+    //console.log("needsPasswordReset:", needsPasswordReset);
+    return { ...user, needsPasswordReset };
   } catch (error) {
     throw new Error("Failed to fetch user from Salesforce: " + error.message);
   }
@@ -219,7 +219,7 @@ const updateSalesforcePassword = async (userId, hashedPassword) => {
   console.log("updateSalesforcePassword salesforce service triggered");
   try {
     const endpoint = `/services/data/v50.0/sobjects/Beneficiary__c/${userId}`;
-    const data = { Password_Hash__c: hashedPassword, isPasswordReset__c: true};
+    const data = { Password_Hash__c: hashedPassword, isPasswordReset__c: true };
     const response = await salesforceRequest("PATCH", endpoint, data);
     return response;
   } catch (error) {
@@ -245,7 +245,7 @@ const authenticateUser = async (username, password) => {
     throw new Error("Invalid credentials");
   }
 
-  const {token} = await authenticateSalesforce();
+  const { token } = await authenticateSalesforce();
 
   return { user, token };
 };
@@ -280,16 +280,16 @@ const getOwnedProducts = async (beneficiaryId) => {
 };
 
 const getClothingBundleId = async (productId) => {
-    console.log('getClothingBundleId salesforce service triggered');
-    if (!conn || !conn.accessToken) {
-      await authenticateSalesforce();
-    }
-    const query = `SELECT Id, Name,Shopify_Product_Id__c  FROM Clothing_Bundles__c WHERE Shopify_Product_Id__c = '${productId}'`;
-    const records = await conn.query(query);
-    console.log('clothing bundles');
-    console.log(records.records[0].Id);
-    return records.records[0].Id;
+  console.log("getClothingBundleId salesforce service triggered");
+  if (!conn || !conn.accessToken) {
+    await authenticateSalesforce();
   }
+  const query = `SELECT Id, Name,Shopify_Product_Id__c  FROM Clothing_Bundles__c WHERE Shopify_Product_Id__c = '${productId}'`;
+  const records = await conn.query(query);
+  console.log("clothing bundles");
+  console.log(records.records[0].Id);
+  return records.records[0].Id;
+};
 
 const getProductItems = async (bundleId) => {
   console.log("getProductItems salesforce service triggered");
@@ -304,71 +304,81 @@ const getProductItems = async (bundleId) => {
 };
 
 const deleteAllClothingItems = async () => {
-    console.log('Deleting all clothing items from Salesforce...');
-    if (!conn || !conn.accessToken) {
-        await authenticateSalesforce();
+  console.log("Deleting all clothing items from Salesforce...");
+  if (!conn || !conn.accessToken) {
+    await authenticateSalesforce();
+  }
+
+  try {
+    // Fetch all records to delete
+    const records = await conn.sobject("Clothing_Items__c").find({}, ["Id"]);
+    const itemIds = records.map((record) => record.Id);
+
+    // Ensure itemIds is an array
+    if (!Array.isArray(itemIds)) {
+      throw new Error("Item IDs must be provided as an array.");
     }
 
-    try {
-        // Fetch all records to delete
-        const records = await conn.sobject('Clothing_Items__c').find({}, ['Id']);
-        const itemIds = records.map(record => record.Id);
-
-        // Ensure itemIds is an array
-        if (!Array.isArray(itemIds)) {
-            throw new Error('Item IDs must be provided as an array.');
-        }
-
-        // Delete records in batches
-        const batchSize = 200; // Adjust batch size based on Salesforce limits
-        const promises = [];
-        for (let i = 0; i < itemIds.length; i += batchSize) {
-            const batchIds = itemIds.slice(i, i + batchSize);
-            promises.push(conn.sobject('Clothing_Items__c').destroy(batchIds));
-        }
-
-        await Promise.all(promises);
-        console.log('All clothing items deleted successfully.');
-    } catch (error) {
-        console.error('Error deleting clothing items:', error);
-        throw error;
+    // Delete records in batches
+    const batchSize = 200; // Adjust batch size based on Salesforce limits
+    const promises = [];
+    for (let i = 0; i < itemIds.length; i += batchSize) {
+      const batchIds = itemIds.slice(i, i + batchSize);
+      promises.push(conn.sobject("Clothing_Items__c").destroy(batchIds));
     }
+
+    await Promise.all(promises);
+    console.log("All clothing items deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting clothing items:", error);
+    throw error;
+  }
 };
 
 const deleteAllClothingBundles = async () => {
-    console.log('Deleting all clothing bundles from Salesforce...');
-    if (!conn || !conn.accessToken) {
-        await authenticateSalesforce();
+  console.log("Deleting all clothing bundles from Salesforce...");
+  if (!conn || !conn.accessToken) {
+    await authenticateSalesforce();
+  }
+
+  try {
+    // Fetch all records to delete
+    const records = await conn.sobject("Clothing_Bundles__c").find({}, ["Id"]);
+    const bundleIds = records.map((record) => record.Id);
+
+    // Ensure bundleIds is an array
+    if (!Array.isArray(bundleIds)) {
+      throw new Error("Bundle IDs must be provided as an array.");
     }
 
-    try {
-        // Fetch all records to delete
-        const records = await conn.sobject('Clothing_Bundles__c').find({}, ['Id']);
-        const bundleIds = records.map(record => record.Id);
-
-        // Ensure bundleIds is an array
-        if (!Array.isArray(bundleIds)) {
-            throw new Error('Bundle IDs must be provided as an array.');
-        }
-
-        // Delete records in batches
-        const batchSize = 200; // Adjust batch size based on Salesforce limits
-        const promises = [];
-        for (let i = 0; i < bundleIds.length; i += batchSize) {
-            const batchIds = bundleIds.slice(i, i + batchSize);
-            promises.push(conn.sobject('Clothing_Bundles__c').destroy(batchIds));
-        }
-
-        await Promise.all(promises);
-        console.log('All clothing bundles deleted successfully.');
-    } catch (error) {
-        console.error('Error deleting clothing bundles:', error);
-        throw error;
+    // Delete records in batches
+    const batchSize = 200; // Adjust batch size based on Salesforce limits
+    const promises = [];
+    for (let i = 0; i < bundleIds.length; i += batchSize) {
+      const batchIds = bundleIds.slice(i, i + batchSize);
+      promises.push(conn.sobject("Clothing_Bundles__c").destroy(batchIds));
     }
+
+    await Promise.all(promises);
+    console.log("All clothing bundles deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting clothing bundles:", error);
+    throw error;
+  }
 };
 
-
-
-
-
-export { authenticateSalesforce, salesforceRequest, getOwnedProducts, getProductItems,deleteAllClothingItems,deleteAllClothingBundles,getClothingBundleId};
+export {
+  authenticateSalesforce,
+  salesforceRequest,
+  getOwnedProducts,
+  getProductItems,
+  deleteAllClothingItems,
+  deleteAllClothingBundles,
+  getClothingBundleId,
+  authenticateLoginSalesforce,
+  setSalesforceConnection,
+  getUserFromSalesforce,
+  updateSalesforcePassword,
+  isUserInSalesforce,
+  authenticateUser,
+};
