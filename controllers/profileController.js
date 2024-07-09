@@ -1,126 +1,50 @@
-import {} from "../services/shopifyService.js";
+import {getBeneficiaryDetails} from "../services/salesforceService.js";
+import { salesforceRequest } from "../services/salesforceService.js";
 
-export const updateUsername = async (req, res, next) => {
-
+export const getProfile = async (req, res, next) => {
+  const userId = req.params.userId;
   try {
-    const response = await updateName(userId);
-
-    for (const productId of productIds) {
-      console.log("update product status after cancellation: ", productId);
-      await updateProductStatus(productId, "active");
-    }
+    const response = await getBeneficiaryDetails(userId);
 
     res.json({
-      success: true,
-      order: response.order,
+      username: response[0].Username__c,
+      aboutMe:response[0].About_Me__c,
+      streetAddress:response[0].Street_Address__c,
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const cancelUserOrder = async (req, res, next) => {
-  const { orderId, productIds  } = req.body;
-  console.log(productIds);
 
-  if (!orderId) {
-    return res.status(400).json({ error: "Order ID is required" });
-  }
-  //todo update cancelation reason on order, cancel_reason: 'customer' - The customer canceled the order.
-  try {
-    const response = await cancelOrder(orderId);
-
-    for (const productId of productIds) {
-      console.log("update product status after cancellation: ", productId);
-      await updateProductStatus(productId, "active");
-    }
-
-    res.json({
-      success: true,
-      order: response.order,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getCustomerOrders = async (req, res, next) => {
-  const { customerId } = req.params;
-
-  if (!customerId) {
-    return res.status(400).json({ error: "Customer ID is required" });
-  }
+export const updateBeneficiary = async (req, res, next) => {
+  const userId = req.params.userId;
+  const { username, aboutMe, streetAddress } = req.body; // Extract fields from request body
 
   try {
-    const orders = await getOrdersByCustomerId(customerId);
-    console.log("orders");
-    console.log(orders);
-    const filteredOrders = orders.filter(order => order.fulfillment_status === 'fulfilled' || 'null' && order.financial_status === 'pending');
-    const transformedOrders = filteredOrders.map(order => {
-      const formattedDate = new Date(order.created_at).toLocaleDateString('en-GB');
-      const formattedTime = new Date(order.created_at).toLocaleTimeString('en-GB');
-      
-      return {
-        id: order.id,
-        date:formattedDate,
-        time: formattedTime,
-        items: order.line_items.length,
-        products: order.line_items.map(item => {
-          
-          return {
-            id: item.product_id,
-            title: item.title,
-            price: parseFloat(item.price),
-            createdAt: formattedDate
-          };
-        }),
-        location: order.line_items.length > 0 ? order.line_items[0].vendor : 'N/A'
-      };
-    });
-
-
-    res.json({
-      success: true,
-      orders: transformedOrders,
-    });
-  } catch (error) {
-    console.error('Error fetching customer orders:', error.message);
-    next(error);
-  }
-};
-
-export const getCustomerOrderById = async (req, res, next) => {
-  const { orderId } = req.params;
-
-  if (!orderId) {
-    return res.status(400).json({ error: 'Order ID is required' });
-  }
-
-  try {
-    const order = await getOrderById(orderId); 
-    if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    const transformedOrder = {
-      id: order.id,
-      date: new Date(order.created_at).toLocaleDateString('en-GB'),
-      time: new Date(order.created_at).toLocaleTimeString('en-GB'),
-      items: order.line_items.length,
-      products: order.line_items.map(item => ({
-        id: item.product_id,
-        title: item.title,
-        price: parseFloat(item.price),
-        createdAt: new Date(order.created_at).toLocaleDateString('en-GB')
-
-      })),
-      location: order.line_items.length > 0 ? order.line_items[0].vendor : 'N/A'
+    // Construct the payload
+    const updatedItem = {
+      Username__c: username,
+      About_Me__c: aboutMe,
+      Street_Address__c: streetAddress
     };
-    console.log("transformedOrder");
-    console.log(transformedOrder);
-    res.json({ success: true, order: transformedOrder });
+
+    // Define the endpoint to update the existing record in Salesforce
+    const endpoint = `/services/data/v52.0/sobjects/Beneficiary__c/${userId}`;
+
+    // Send the PUT request to Salesforce
+    console.log('Sending request to Salesforce to update the user...');
+    await salesforceRequest('PATCH', endpoint, updatedItem); // Note: Use 'PATCH' for partial updates in Salesforce
+    console.log('User updated successfully in Salesforce');
+    // Send a success response back to the client
+    res.status(200).json({
+      message: 'User updated successfully',
+      username: updatedItem.Username__c,
+      aboutMe:updatedItem.About_Me__c,
+      streetAddress:updatedItem.Street_Address__c,
+    });
   } catch (error) {
-    console.error('Error fetching order:', error.message);
+    console.error('Error updating item in Salesforce:', error.message);
     next(error);
   }
 };
