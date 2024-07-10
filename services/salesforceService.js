@@ -154,7 +154,7 @@ const getUserFromSalesforce = async (username, password) => {
     );
   }
   try {
-    const query = `SELECT Id, Username__c, Password_Hash__c, isPasswordReset__c, Shopify_Id__c FROM Beneficiary__c WHERE Username__c = '${username}'`;
+    const query = `SELECT Id, Username__c, Password_Hash__c, isPasswordReset__c, Shopify_Id__c, About_Me__c, Street_Address__c FROM Beneficiary__c WHERE Username__c = '${username}'`;
     const response = await salesforceRequest(
       "GET",
       `/services/data/v50.0/query?q=${encodeURIComponent(query)}`
