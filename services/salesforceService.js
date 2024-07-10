@@ -89,7 +89,7 @@ const authenticateSalesforce = async () => {
     });
 
     console.log("JWT authentication successful:", conn.accessToken);
-    return { token };
+    return { token,payload};
   } catch (error) {
     const errorMsg = error.response
       ? JSON.stringify(error.response.data, null, 2)
@@ -367,6 +367,17 @@ const deleteAllClothingBundles = async () => {
   }
 };
 
+const getBeneficiaryDetails = async (userId) => {
+    console.log('getBeneficiaryDetails salesforce service triggered');
+    if (!conn || !conn.accessToken) {
+      await authenticateSalesforce();
+    }
+    const query = `SELECT Username__c, About_me__c, Street_Address__c FROM Beneficiary__c WHERE Id = '${userId}'`;
+    const profileRecord = await conn.query(query);
+    console.log('records');
+    console.log(profileRecord.records);
+    return profileRecord.records;
+  }
 export {
   authenticateSalesforce,
   salesforceRequest,
@@ -381,4 +392,5 @@ export {
   updateSalesforcePassword,
   isUserInSalesforce,
   authenticateUser,
+  getBeneficiaryDetails
 };

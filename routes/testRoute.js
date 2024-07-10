@@ -1,7 +1,7 @@
 import express from 'express';
 import { test } from '../controllers/testController.js';
-import { deleteAllClothingItems } from '../services/salesforceService.js';
-import { deleteAllClothingBundles } from '../services/salesforceService.js';
+import { deleteAllClothingItems } from '../controllers/testController.js';
+import { deleteAllClothingBundles } from '../controllers/testController.js';
 
 const router = express.Router();
 
