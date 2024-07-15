@@ -43,10 +43,9 @@ export const getUserOwnedProducts = async (req, res, next) => {
   try {
     // console.log('pre get owned products');
     const products = await getBeneficiaryProducts(customerId);  //Call shopify service to fetch orders
-    // console.log('post get owned products');
-    // console.log("ProductsAll",products)
+    
     const productItemsPromises = products.map(async (product) => {
-      // console.log("Product",product)
+       //console.log("Product",product)
       const items = await getProductItems(product.id);
       const clothingBundlesId = await getClothingBundleId(product.id);
       return {

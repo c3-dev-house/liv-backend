@@ -33,7 +33,7 @@ export const createOrder = async (req, res, next) => {
     return res.status(400).json({ error: "Invalid request data" });
   }
 
-  //todo: check if reservations for week has reached it's limit. return amount of bundles that can still be reserved - need to test.
+  //todo: check if reservations for week has reached it's limit. return amount of bundles that can still be reserved - need to test. tested - works
 
 
 
