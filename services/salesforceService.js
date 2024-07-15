@@ -64,7 +64,7 @@ const authenticateSalesforce = async () => {
       iss: salesforce.clientId,
       sub: salesforce.username,
       aud: salesforce.loginUrl,
-      exp: Math.floor(Date.now() / 1000) + 60 * 10, // 10 minutes expiration
+      exp: Math.floor(Date.now() / 1000) + 60 * 30, // 10 minutes expiration
     };
 
     const token = jwt.sign(payload, privateKey, { algorithm: "RS256" });

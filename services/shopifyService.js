@@ -33,6 +33,7 @@ export const getBeneficiaryProducts = async (customerId) => {
     console.log("purchases", purchases);
 
     const filteredSales = purchases.filter(sale => sale.financial_status === 'paid');
+    console.log("filteredSales", filteredSales);
     const transformedSales = filteredSales.map(sale => {
       const formattedDate = new Date(sale.created_at).toLocaleDateString('en-GB');
       const formattedTime = new Date(sale.created_at).toLocaleTimeString('en-GB');
