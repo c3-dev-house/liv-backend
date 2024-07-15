@@ -7,6 +7,7 @@ import {
   getFulfillmentOrders,
   getOrdersByCustomerId,
   getOrderById,
+  orderPaid,
   getWeeklyReservedQuantity
   
 } from "../services/shopifyService.js";
@@ -134,6 +135,31 @@ export const cancelUserOrder = async (req, res, next) => {
   }
 };
 
+export const markUserOrderAsPaid = async (req, res, next) => {
+  const { orderId, productIds  } = req.body;
+  console.log(productIds);
+
+  if (!orderId) {
+    return res.status(400).json({ error: "Order ID is required" });
+  }
+  //todo update cancelation reason on order, cancel_reason: 'customer' - The customer canceled the order.
+  try {
+    const response = await orderPaid(orderId);
+
+    for (const productId of productIds) {
+      console.log("update product status after payment: ", productId);
+      await updateProductStatus(productId, "archived");
+    }
+
+    res.json({
+      success: true,
+      order: response.order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getCustomerOrders = async (req, res, next) => {
   const { customerId } = req.params;
 
@@ -145,7 +171,7 @@ export const getCustomerOrders = async (req, res, next) => {
     const orders = await getOrdersByCustomerId(customerId);
     console.log("orders");
     console.log(orders);
-    const filteredOrders = orders.filter(order => order.fulfillment_status === 'fulfilled' || 'null' && order.financial_status === 'pending');
+    const filteredOrders = orders.filter(order => (order.fulfillment_status === 'fulfilled' || order.fulfillment_status === null) && order.financial_status === 'pending');
     const transformedOrders = filteredOrders.map(order => {
       const formattedDate = new Date(order.created_at).toLocaleDateString('en-GB');
       const formattedTime = new Date(order.created_at).toLocaleTimeString('en-GB');

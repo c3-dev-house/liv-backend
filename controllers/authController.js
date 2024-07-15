@@ -1,4 +1,4 @@
-import { authenticateLoginSalesforce, setSalesforceConnection, getUserFromSalesforce, authenticateSalesforce, updateSalesforcePassword, authenticateUser, isUserInSalesforce } from '../services/salesforceService.js'
+import { authenticateLoginSalesforce, setSalesforceConnection, getUserFromSalesforce, authenticateSalesforce, updateSalesforcePassword, authenticateUser, isUserInSalesforce,authenticateAdminLogin } from '../services/salesforceService.js'
 import bcrypt from 'bcrypt';
 
 const saltRounds = 10;
@@ -44,6 +44,24 @@ try {
   console.log(error);     
 }
 }
+
+
+export const adminLogin = async (req, res) => {
+  const { username, password } = req.body;
+  
+  try {
+    const result = await authenticateAdminLogin(username, password);
+    console.log("Result",result)
+    if (result.success) {
+      res.status(200).json({ message: 'Login successful'});
+    } else {
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    console.error('Error during login:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 export const resetPassword = async (req, res, next) => {
   console.log('resetPassword reached');

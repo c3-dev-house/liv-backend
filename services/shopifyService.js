@@ -27,13 +27,12 @@ export const getBeneficiaryProducts = async (customerId) => {
   if (!customerId) {
     throw new Error("Customer ID is required");
   }
-
+  console.log('Customer Id,', customerId)
   try {
     const purchases = await getOrdersByCustomerId(customerId);
     console.log("purchases", purchases);
 
-    const filteredSales = purchases.filter(sale => sale.financial_status === 'paid');
-    console.log("filteredSales", filteredSales);
+    const filteredSales = purchases.filter(sale => sale.financial_status === 'paid' && (sale.fulfillment_status === 'fulfilled' || sale.fulfillment_status === null));
     const transformedSales = filteredSales.map(sale => {
       const formattedDate = new Date(sale.created_at).toLocaleDateString('en-GB');
       const formattedTime = new Date(sale.created_at).toLocaleTimeString('en-GB');
@@ -66,10 +65,6 @@ export const getBeneficiaryProducts = async (customerId) => {
         }))
       );
 
-    console.log("Products Array:", productsArray);
-    console.log("First Product", transformedSales[0].products[0]);
-    console.log("Products Array:", productsArray);
-    console.log("Products", transformedSales[0].products[0])
     return productsArray;
 
   } catch (error) {
@@ -117,6 +112,27 @@ export const cancelOrder = async (orderId) => {
     }
   );
   return response.data;
+};
+
+export const orderPaid = async (orderId) => {
+  try {
+    const response = await axios.post(
+      `https://${shopify.storeUrl}/admin/api/2024-04/orders/${orderId}/transactions.json`,
+      {
+        transaction: {
+          kind: 'capture', // or 'sale' depending on your needs
+          status: 'success',
+        },
+      },
+      {
+        headers: shopifyHeaders,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error marking order as paid:', error);
+    throw error;
+  }
 };
 
 export const updateProductStatus = async (productId, status) => {
