@@ -1,5 +1,6 @@
 import axios from "axios";
 import { shopify } from "../config/authConfig.js";
+import moment from 'moment';
 
 const shopifyHeaders = {
   "X-Shopify-Access-Token": shopify.accessToken,
@@ -220,4 +221,36 @@ export const getOrderById = async (orderId) => {
   );
   console.log("response", response.data.order);
   return response.data.order;
+};
+
+export const getOrdersByCustomerAndDateRange = async (customerId, startDate, endDate) => {
+  const response = await axios.get(
+    `https://${shopify.storeUrl}/admin/api/2024-04/orders.json`,
+    {
+      headers: shopifyHeaders,
+      params: {
+        customer_id: customerId,
+        created_at_min: startDate.toISOString(),
+        created_at_max: endDate.toISOString(),
+        fields: "id,created_at,line_items",
+      },
+    }
+  );
+  return response.data.orders;
+};
+
+export const getWeeklyReservedQuantity = async (customerId) => {
+  const startOfWeek = moment().startOf('week').toDate();
+  const endOfWeek = moment().endOf('week').toDate();
+  const orders = await getOrdersByCustomerAndDateRange(customerId, startOfWeek, endOfWeek);
+  //console.log("number of orders: ", orders.length);
+
+  let totalQuantity = 0;
+  orders.forEach(order => {
+    order.line_items.forEach(item => {
+      totalQuantity += item.quantity;
+    });
+  });
+
+  return totalQuantity;
 };

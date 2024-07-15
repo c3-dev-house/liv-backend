@@ -7,7 +7,8 @@ import {
   getFulfillmentOrders,
   getOrdersByCustomerId,
   getOrderById,
-  orderPaid
+  orderPaid,
+  getWeeklyReservedQuantity
   
 } from "../services/shopifyService.js";
 
@@ -15,6 +16,7 @@ import {
 
 export const createOrder = async (req, res, next) => {
   const { customerId, variantIds, productIds } = req.body;
+  const WEEKLY_LIMIT = 10;
   console.log("createOrder controller triggered");
   console.log("req.body:");
   console.log(req.body);
@@ -32,9 +34,24 @@ export const createOrder = async (req, res, next) => {
     return res.status(400).json({ error: "Invalid request data" });
   }
 
-  //todo: check if reservations for week has reached it's limit. return amount of bundles that can still be reserved
+  //todo: check if reservations for week has reached it's limit. return amount of bundles that can still be reserved - need to test. tested - works
+
+
 
   try {
+    const currentReservedQuantity = await getWeeklyReservedQuantity(customerId);
+    const currentOrderQuantity = variantIds.length;
+    console.log("currently reserved historic:", currentReservedQuantity);
+    console.log("currently ordered:", currentOrderQuantity);
+
+    if (currentReservedQuantity + currentOrderQuantity > WEEKLY_LIMIT) {
+      const remainingQuantity = WEEKLY_LIMIT - currentReservedQuantity;
+      return res.status(400).json({
+        error: "Weekly reservation limit exceeded",
+        remainingQuantity: Math.max(remainingQuantity, 0)
+      });
+    }
+
     // Create the draft order for draftOrderResponse
     const draftOrderData = {
       draft_order: {
