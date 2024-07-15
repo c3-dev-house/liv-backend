@@ -26,7 +26,7 @@ export const getBeneficiaryProducts = async (customerId) => {
   if (!customerId) {
     throw new Error("Customer ID is required");
   }
-
+  console.log('Customer Id,', customerId)
   try {
     const purchases = await getOrdersByCustomerId(customerId);
     console.log("purchases", purchases);
@@ -115,6 +115,27 @@ export const cancelOrder = async (orderId) => {
     }
   );
   return response.data;
+};
+
+export const orderPaid = async (orderId) => {
+  try {
+    const response = await axios.post(
+      `https://${shopify.storeUrl}/admin/api/2024-04/orders/${orderId}/transactions.json`,
+      {
+        transaction: {
+          kind: 'capture', // or 'sale' depending on your needs
+          status: 'success',
+        },
+      },
+      {
+        headers: shopifyHeaders,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error marking order as paid:', error);
+    throw error;
+  }
 };
 
 export const updateProductStatus = async (productId, status) => {

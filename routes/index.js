@@ -6,6 +6,7 @@ import itemRoutes from './itemRoutes.js';
 import authRoutes from './authRoutes.js';
 import orderRoutes from './orderRoutes.js';
 import profileRoutes from './profileRoutes.js';
+import adminRoutes from './adminRoutes.js';
 
 const router = express.Router();
 
@@ -15,6 +16,7 @@ router.use('/overview', overviewRoutes);
 router.use('/items', itemRoutes);
 router.use('/auth', authRoutes);
 router.use('/profile',profileRoutes);
+router.use('/admin',adminRoutes);
 
 
 router.use('/orders', orderRoutes);

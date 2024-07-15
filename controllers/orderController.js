@@ -6,7 +6,8 @@ import {
   createFulfillment,
   getFulfillmentOrders,
   getOrdersByCustomerId,
-  getOrderById
+  getOrderById,
+  orderPaid
   
 } from "../services/shopifyService.js";
 
@@ -106,6 +107,31 @@ export const cancelUserOrder = async (req, res, next) => {
     for (const productId of productIds) {
       console.log("update product status after cancellation: ", productId);
       await updateProductStatus(productId, "active");
+    }
+
+    res.json({
+      success: true,
+      order: response.order,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markUserOrderAsPaid = async (req, res, next) => {
+  const { orderId, productIds  } = req.body;
+  console.log(productIds);
+
+  if (!orderId) {
+    return res.status(400).json({ error: "Order ID is required" });
+  }
+  //todo update cancelation reason on order, cancel_reason: 'customer' - The customer canceled the order.
+  try {
+    const response = await orderPaid(orderId);
+
+    for (const productId of productIds) {
+      console.log("update product status after payment: ", productId);
+      await updateProductStatus(productId, "archived");
     }
 
     res.json({

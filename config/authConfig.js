@@ -17,3 +17,8 @@ export const shopify = {
   storeUrl: process.env.SHOPIFY_STORE_URL,
   storeLocationId: process.env.SHOPIFY_STORE_LOCATION_ID
 };
+
+export const umthombo = {
+  username:process.env.UMTHOMBO_ADMIN_USERNAME,
+  password:process.env.UMTHOMBO_ADMIN_PASSWORD,
+}

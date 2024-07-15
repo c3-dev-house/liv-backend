@@ -48,6 +48,28 @@ const authenticateLoginSalesforce = async () => {
     throw new Error("Salesforce login failed: " + errorMsg);
   }
 };
+const verifyCredentials = async (username, password) => {
+    const staticUsername = process.env.UMTHOMBO_ADMIN_USERNAME;
+    const staticPassword = process.env.UMTHOMBO_ADMIN_PASSWORD;
+    console.log('username',username,'password',password);
+    return username === staticUsername && password === staticPassword;
+  };
+
+  const authenticateAdminLogin = async (username, password) => {
+    try {
+      const credentialsValid = await verifyCredentials(username, password);
+  
+      if (credentialsValid) {
+        return { success: true, needsPasswordReset: false };
+      } else {
+        return { success: false };
+      }
+    } catch (error) {
+      console.error('Error during admin login:', error);
+      throw error; // Handle and throw specific errors if needed
+    }
+  };
+  
 
 const authenticateSalesforce = async () => {
   // Get the directory path of the current module file
@@ -187,6 +209,42 @@ const getUserFromSalesforce = async (username, password) => {
     throw new Error("Failed to fetch user from Salesforce: " + error.message);
   }
 };
+
+const getAllUserFromSalesforce = async () => {
+    console.log("getAllUserFromSalesforce salesforce service triggered");
+    if (!conn || !conn.accessToken) {
+      const authenticateLoginSalesforceResponse =
+        await authenticateLoginSalesforce();
+      setSalesforceConnection(
+        authenticateLoginSalesforceResponse.accessToken,
+        authenticateLoginSalesforceResponse.instanceUrl
+      );
+    }
+    try {
+      const query = `SELECT Username__c,Shopify_Id__c FROM Beneficiary__c`;
+      const response = await salesforceRequest(
+        "GET",
+        `/services/data/v50.0/query?q=${encodeURIComponent(query)}`
+      );
+      console.log("getAllUserFromSalesforce response:", response.records);
+      if (response.records.length === 0) {
+        return null;
+      }
+  
+      const usersArray = response.records
+            .map((user) => ({
+                Username__c: user.Username__c,
+                Shopify_Id__c: user.Shopify_Id__c
+            }))
+            .filter(user => user.Username__c !== null);
+        
+        console.log("Users found:", usersArray);
+
+        return usersArray;
+    } catch (error) {
+      throw new Error("Failed to fetch user from Salesforce: " + error.message);
+    }
+  };
 
 // Function to check if a user exists in Salesforce by username - used for forget password controller
 const isUserInSalesforce = async (username) => {
@@ -392,5 +450,7 @@ export {
   updateSalesforcePassword,
   isUserInSalesforce,
   authenticateUser,
-  getBeneficiaryDetails
+  getBeneficiaryDetails,
+  getAllUserFromSalesforce,
+  authenticateAdminLogin
 };
