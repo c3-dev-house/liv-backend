@@ -31,7 +31,7 @@ export const getBeneficiaryProducts = async (customerId) => {
     const purchases = await getOrdersByCustomerId(customerId);
     console.log("purchases", purchases);
 
-    const filteredSales = purchases.filter(sale => sale.financial_status === 'paid');
+    const filteredSales = purchases.filter(sale => sale.financial_status === 'paid' && (sale.fulfillment_status === 'fulfilled' || sale.fulfillment_status === null));
     const transformedSales = filteredSales.map(sale => {
       const formattedDate = new Date(sale.created_at).toLocaleDateString('en-GB');
       const formattedTime = new Date(sale.created_at).toLocaleTimeString('en-GB');
@@ -64,10 +64,6 @@ export const getBeneficiaryProducts = async (customerId) => {
         }))
       );
 
-    console.log("Products Array:", productsArray);
-    console.log("First Product", transformedSales[0].products[0]);
-    console.log("Products Array:", productsArray);
-    console.log("Products", transformedSales[0].products[0])
     return productsArray;
 
   } catch (error) {

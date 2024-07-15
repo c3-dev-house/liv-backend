@@ -338,15 +338,15 @@ const getOwnedProducts = async (beneficiaryId) => {
 };
 
 const getClothingBundleId = async (productId) => {
-  console.log("getClothingBundleId salesforce service triggered");
+  console.log("getClothingBundleIds salesforce service triggered");
   if (!conn || !conn.accessToken) {
     await authenticateSalesforce();
   }
-  const query = `SELECT Id, Name,Shopify_Product_Id__c  FROM Clothing_Bundles__c WHERE Shopify_Product_Id__c = '${productId}'`;
+  const query = `SELECT Id, Name, Shopify_Product_Id__c FROM Clothing_Bundles__c WHERE Shopify_Product_Id__c = '${productId}'`;
   const records = await conn.query(query);
   console.log("clothing bundles");
-  console.log(records.records[0].Id);
-  return records.records[0].Id;
+  console.log(records);
+  return records.records.map(record => record.Id);
 };
 
 const getProductItems = async (bundleId) => {
