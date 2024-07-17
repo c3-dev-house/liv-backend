@@ -1,4 +1,4 @@
-import { getBeneficiaryProducts, getProducts } from '../services/shopifyService.js';
+import { getBeneficiaryProducts, getProducts,getCategorizedProducts } from '../services/shopifyService.js';
 import { getOwnedProducts, getProductItems, getClothingBundleId } from '../services/salesforceService.js';
 
 //fetches all products from shopify vendor
@@ -23,6 +23,37 @@ export const getVendorProducts = async (req, res, next) => {
           price: variant.price
         }))
       }));
+    res.json(transformedProducts);
+  } catch (error) {
+    console.error('Error fetching products:', error.message);
+    next(error);
+  }
+};
+
+export const getVendorAndCategoryProducts = async (req, res, next) => {
+  const { vendor, product_type } = req.query;
+
+  if (!product_type || !vendor) {
+    return res.status(400).json({ error: 'All query parameters are required' });
+  }
+
+  try {
+    const products = await getCategorizedProducts(vendor, product_type);
+    
+    const transformedProducts = products.map(product => ({
+      id: product.id,
+      title: product.title,
+      vendor: product.vendor,
+      productType: product.product_type,
+      bodyHtml: product.body_html,
+      createdAt: new Date(product.created_at).toISOString().split('T')[0],
+      status: product.status,
+      variants: product.variants.map(variant => ({
+        id: variant.id,
+        price: variant.price
+      }))
+    }));
+
     res.json(transformedProducts);
   } catch (error) {
     console.error('Error fetching products:', error.message);

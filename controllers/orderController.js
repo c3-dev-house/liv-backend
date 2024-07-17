@@ -17,9 +17,9 @@ import {
 export const createOrder = async (req, res, next) => {
   const { customerId, variantIds, productIds } = req.body;
   const WEEKLY_LIMIT = 10;
-  console.log("createOrder controller triggered");
-  console.log("req.body:");
-  console.log(req.body);
+  // console.log("createOrder controller triggered");
+  // console.log("req.body:");
+  // console.log(req.body);
   //const customerId ='7024877994031' //todo find test user id, grace shopify id.
   //const variantIds = ['42995584892975']; //42998797860911 //42998633070639 female teen clothing R200
 
@@ -41,8 +41,8 @@ export const createOrder = async (req, res, next) => {
   try {
     const currentReservedQuantity = await getWeeklyReservedQuantity(customerId);
     const currentOrderQuantity = variantIds.length;
-    console.log("currently reserved historic:", currentReservedQuantity);
-    console.log("currently ordered:", currentOrderQuantity);
+    // console.log("currently reserved historic:", currentReservedQuantity);
+    // console.log("currently ordered:", currentOrderQuantity);
 
     if (currentReservedQuantity + currentOrderQuantity > WEEKLY_LIMIT) {
       const remainingQuantity = WEEKLY_LIMIT - currentReservedQuantity;
@@ -64,11 +64,11 @@ export const createOrder = async (req, res, next) => {
         }
       },
     };
-    console.log(draftOrderData);
+    // console.log(draftOrderData);
 
     //todo: create draft and completed order - done - works
 
-    console.log("before draft order response");
+    // console.log("before draft order response");
     // Make a request to Shopify to create the draft order
     const draftOrderResponse = await createDraftOrder(draftOrderData);
    
@@ -91,13 +91,13 @@ export const createOrder = async (req, res, next) => {
    
 
     const fulfillment = await createFulfillment(fulfillmentOrderId);
-    console.log('fulfillment: ', fulfillment);
+    // console.log('fulfillment: ', fulfillment);
 
 
     //todo update product status to inactive (for both variants too if required) - done - works
 
     for (const productId of productIds) {
-      console.log("update product status after order: ", productId);
+      // console.log("update product status after order: ", productId);
       await updateProductStatus(productId, "draft");
     }
 
@@ -112,7 +112,7 @@ export const createOrder = async (req, res, next) => {
 
 export const cancelUserOrder = async (req, res, next) => {
   const { orderId, productIds  } = req.body;
-  console.log(productIds);
+  // console.log(productIds);
 
   if (!orderId) {
     return res.status(400).json({ error: "Order ID is required" });
@@ -122,7 +122,7 @@ export const cancelUserOrder = async (req, res, next) => {
     const response = await cancelOrder(orderId);
 
     for (const productId of productIds) {
-      console.log("update product status after cancellation: ", productId);
+      // console.log("update product status after cancellation: ", productId);
       await updateProductStatus(productId, "active");
     }
 
@@ -137,7 +137,7 @@ export const cancelUserOrder = async (req, res, next) => {
 
 export const markUserOrderAsPaid = async (req, res, next) => {
   const { orderId, productIds  } = req.body;
-  console.log(productIds);
+  // console.log(productIds);
 
   if (!orderId) {
     return res.status(400).json({ error: "Order ID is required" });
@@ -147,7 +147,7 @@ export const markUserOrderAsPaid = async (req, res, next) => {
     const response = await orderPaid(orderId);
 
     for (const productId of productIds) {
-      console.log("update product status after payment: ", productId);
+      // console.log("update product status after payment: ", productId);
       await updateProductStatus(productId, "archived");
     }
 
@@ -169,8 +169,8 @@ export const getCustomerOrders = async (req, res, next) => {
 
   try {
     const orders = await getOrdersByCustomerId(customerId);
-    console.log("orders");
-    console.log(orders);
+    // console.log("orders");
+    // console.log(orders);
     const filteredOrders = orders.filter(order => (order.fulfillment_status === 'fulfilled' || order.fulfillment_status === null) && order.financial_status === 'pending');
     const transformedOrders = filteredOrders.map(order => {
       const formattedDate = new Date(order.created_at).toLocaleDateString('en-GB');
@@ -232,8 +232,8 @@ export const getCustomerOrderById = async (req, res, next) => {
       })),
       location: order.line_items.length > 0 ? order.line_items[0].vendor : 'N/A'
     };
-    console.log("transformedOrder");
-    console.log(transformedOrder);
+    // console.log("transformedOrder");
+    // console.log(transformedOrder);
     res.json({ success: true, order: transformedOrder });
   } catch (error) {
     console.error('Error fetching order:', error.message);
