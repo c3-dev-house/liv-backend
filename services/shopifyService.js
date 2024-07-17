@@ -23,6 +23,23 @@ export const getProducts = async (vendor) => {
   return response.data.products;
 };
 
+export const getCategorizedProducts = async (vendor,productType) => {
+  console.log("getCategorizedProducts service triggered");
+  const response = await axios.get(
+    `https://${shopify.storeUrl}/admin/api/2024-04/products.json`,
+    {
+      headers: shopifyHeaders,
+      params: {
+        vendor: vendor,
+        product_type: productType,
+        fields: "id,title,product_type,variants,vendor,body_html,created_at,status",
+      },
+    }
+  );
+  console.log("response", response.data.products);
+  return response.data.products;
+};
+
 export const getBeneficiaryProducts = async (customerId) => {
   if (!customerId) {
     throw new Error("Customer ID is required");
@@ -204,6 +221,7 @@ export const getOrdersByCustomerId = async (customerId) => {
       params: {
         customer_id: customerId,
         fields: "id,customer,id,fulfillment_status,financial_status,line_items,created_at",
+        status:'any'
       },
     }
   );

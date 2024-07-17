@@ -14,14 +14,4 @@ export const getAllBeneficiaries = async (req, res, next) => {
     }
 };
 
-export const deleteAllClothingBundles = async (req, res, next) => {
-  try {
-      await deleteAllClothingBundles();
-      res.status(200).json({ message: 'All clothing bundles deleted successfully.' });
-  } catch (error) {
-      console.error('Error deleting all clothing items:', error);
-      next(error);
-  }
-};
-
 

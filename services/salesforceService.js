@@ -361,69 +361,39 @@ const getProductItems = async (bundleId) => {
   return records.records;
 };
 
-const deleteAllClothingItems = async () => {
-  console.log("Deleting all clothing items from Salesforce...");
-  if (!conn || !conn.accessToken) {
-    await authenticateSalesforce();
-  }
-
-  try {
-    // Fetch all records to delete
-    const records = await conn.sobject("Clothing_Items__c").find({}, ["Id"]);
-    const itemIds = records.map((record) => record.Id);
-
-    // Ensure itemIds is an array
-    if (!Array.isArray(itemIds)) {
-      throw new Error("Item IDs must be provided as an array.");
-    }
-
-    // Delete records in batches
-    const batchSize = 200; // Adjust batch size based on Salesforce limits
-    const promises = [];
-    for (let i = 0; i < itemIds.length; i += batchSize) {
-      const batchIds = itemIds.slice(i, i + batchSize);
-      promises.push(conn.sobject("Clothing_Items__c").destroy(batchIds));
-    }
-
-    await Promise.all(promises);
-    console.log("All clothing items deleted successfully.");
-  } catch (error) {
-    console.error("Error deleting clothing items:", error);
-    throw error;
-  }
-};
-
-const deleteAllClothingBundles = async () => {
+const deleteAll = async (objectName) => {
   console.log("Deleting all clothing bundles from Salesforce...");
+
   if (!conn || !conn.accessToken) {
     await authenticateSalesforce();
   }
 
   try {
     // Fetch all records to delete
-    const records = await conn.sobject("Clothing_Bundles__c").find({}, ["Id"]);
-    const bundleIds = records.map((record) => record.Id);
+    const records = await conn.sobject(objectName).find({}, ["Id"]);
+    const Ids = records.map((record) => record.Id);
 
     // Ensure bundleIds is an array
-    if (!Array.isArray(bundleIds)) {
-      throw new Error("Bundle IDs must be provided as an array.");
+    if (!Array.isArray(Ids)) {
+      throw new Error("IDs must be provided as an array.");
     }
 
     // Delete records in batches
     const batchSize = 200; // Adjust batch size based on Salesforce limits
     const promises = [];
-    for (let i = 0; i < bundleIds.length; i += batchSize) {
-      const batchIds = bundleIds.slice(i, i + batchSize);
-      promises.push(conn.sobject("Clothing_Bundles__c").destroy(batchIds));
+    for (let i = 0; i < Ids.length; i += batchSize) {
+      const batchIds = Ids.slice(i, i + batchSize);
+      promises.push(conn.sobject(objectName).del(batchIds));
     }
 
     await Promise.all(promises);
-    console.log("All clothing bundles deleted successfully.");
+    console.log(`All ${objectName} records deleted successfully.`);
   } catch (error) {
-    console.error("Error deleting clothing bundles:", error);
+    console.error("Error deleting records:", error.message);
     throw error;
   }
 };
+
 
 const getBeneficiaryDetails = async (userId) => {
     console.log('getBeneficiaryDetails salesforce service triggered');
@@ -441,8 +411,7 @@ export {
   salesforceRequest,
   getOwnedProducts,
   getProductItems,
-  deleteAllClothingItems,
-  deleteAllClothingBundles,
+  deleteAll,
   getClothingBundleId,
   authenticateLoginSalesforce,
   setSalesforceConnection,

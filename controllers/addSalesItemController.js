@@ -17,9 +17,9 @@ export const addSalesItem = async (req, res, next) => {
     const endpoint = '/services/data/v52.0/sobjects/Clothing_Items__c';
 
     // Send the POST request to Salesforce
-    console.log('Sending request to Salesforce to add a new item...');
+    // console.log('Sending request to Salesforce to add a new item...');
     const data = await salesforceRequest('POST', endpoint, newItem);
-    console.log('Received data from Salesforce:', data);
+    // console.log('Received data from Salesforce:', data);
 
     // Send a success response back to the client
     res.status(201).json({

@@ -1,4 +1,6 @@
 import { salesforceRequest } from '../services/salesforceService.js';
+import { deleteAll } from '../services/salesforceService.js';
+
 
 export const test = async (req, res, next) => {
   try {
@@ -12,23 +14,14 @@ export const test = async (req, res, next) => {
   }
 };
 
-export const deleteAllClothingItems = async (req, res, next) => {
-    try {
-        await deleteAllClothingItems();
-        res.status(200).json({ message: 'All clothing items deleted successfully.' });
-    } catch (error) {
-        console.error('Error deleting all clothing items:', error);
-        next(error);
-    }
-};
 
-export const deleteAllClothingBundles = async (req, res, next) => {
+export const deleteAllRecords = async (req, res, next) => {
   try {
-      await deleteAllClothingBundles();
-      res.status(200).json({ message: 'All clothing bundles deleted successfully.' });
+      const response= await deleteAll('General_Customer__c' ); //ENTER OBJECT TO DELETE
+      console.log(response)
+      res.status(200).json({ message: 'All records deleted successfully.' });
   } catch (error) {
       console.error('Error deleting all clothing items:', error);
-      next(error);
   }
 };
 
