@@ -128,6 +128,8 @@ export const cancelOrder = async (orderId) => {
       headers: shopifyHeaders,
     }
   );
+  console.log('Cancel Order,',response.data)
+  console.log('Cancel OrderId,',orderId)
   return response.data;
 };
 
@@ -220,7 +222,7 @@ export const getOrdersByCustomerId = async (customerId) => {
       headers: shopifyHeaders,
       params: {
         customer_id: customerId,
-        fields: "id,customer,id,fulfillment_status,financial_status,line_items,created_at",
+        fields: "id,customer,id,fulfillment_status,financial_status,line_items,created_at,cancel_reason",
         status:'any'
       },
     }

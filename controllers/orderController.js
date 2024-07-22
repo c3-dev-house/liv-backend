@@ -169,13 +169,14 @@ export const getCustomerOrders = async (req, res, next) => {
 
   try {
     const orders = await getOrdersByCustomerId(customerId);
-    // console.log("orders");
-    // console.log(orders);
-    const filteredOrders = orders.filter(order => (order.fulfillment_status === 'fulfilled' || order.fulfillment_status === null) && order.financial_status === 'pending');
+    console.log("orders");
+    console.log(orders);
+    orders.map((order)=>{console.log('this',order.cancel_reason)})
+    const filteredOrders = orders.filter(order => (order.fulfillment_status === 'fulfilled' || order.fulfillment_status === null ) && order.financial_status === 'pending' && order.cancel_reason !== 'other' );
     const transformedOrders = filteredOrders.map(order => {
       const formattedDate = new Date(order.created_at).toLocaleDateString('en-GB');
       const formattedTime = new Date(order.created_at).toLocaleTimeString('en-GB');
-      
+
       return {
         id: order.id,
         date:formattedDate,

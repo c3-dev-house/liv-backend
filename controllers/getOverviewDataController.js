@@ -11,7 +11,7 @@ export const getBeneficiarySales = async (req, res, next) => {
     const totalProfit = totalProfitData.records.length > 0 ? totalProfitData.records[0].totalProfit : 0;
 
     // console.log('Sending request to Salesforce for cost of goods...');
-    const costOfGoodsQuery = `SELECT SUM(Bundle_Price__c) bundlePrice FROM Clothing_Bundles__c WHERE Beneficiary__c='${userId}'`;
+    const costOfGoodsQuery = `SELECT SUM(Bundle_Price__c) bundlePrice FROM Clothing_Bundles__c WHERE Beneficiary__c='${userId}' AND Sales_Status__c ='Sold'`;
     const costOfGoodsEndpoint = `/services/data/v52.0/query?q=${encodeURIComponent(costOfGoodsQuery)}`;
     const costOfGoodsData = await salesforceRequest('GET', costOfGoodsEndpoint);
     const costOfGoods = costOfGoodsData.records.length > 0 ? costOfGoodsData.records[0].bundlePrice : 0;
