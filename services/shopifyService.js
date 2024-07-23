@@ -274,3 +274,53 @@ export const getWeeklyReservedQuantity = async (customerId) => {
 
   return totalQuantity;
 };
+
+
+export const registerApplicant = async (formData) => {
+  // Define the createCustomer function within registerApplicant
+  const inputData = formData.formData;
+  console.log('formData here',inputData.email)
+  const createCustomer = async () => {
+    const note = `
+      is_reseller_applicant: on|
+      id_number: ${inputData.idNumber}|
+      dob: ${inputData.birthDate}|
+      gender: ${inputData.gender}|
+      referred_by: ${inputData.referredBy}|
+      mobile_number: ${inputData.mobileNumber}|
+      alternative_number: ${inputData.alternativeNumber}|
+      city: ${inputData.city}|
+      street_address: ${inputData.streetAddress}|
+      province: ${inputData.province}|
+      race: ${inputData.race}|
+      children_under_18: ${inputData.numberOfChildren}|
+      disabled: ${inputData.disabilities}|
+      criminal_record: ${inputData.criminalRecord}|
+      related_to_liv_employee: ${inputData.relatedToLIV}|
+    `;
+
+    const customerData = {
+      customer: {
+        email: inputData.email,
+        first_name: inputData.name,
+        last_name: inputData.surname,
+        note: note.trim(),
+      }
+    };
+    console.log('customerData',customerData)
+    try {
+      // Make the API request to Shopify
+      const response = await axios.post(`https://${shopify.storeUrl}/admin/api/2024-04/customers.json`, customerData, {
+        headers: shopifyHeaders,
+      });
+      console.log("Customer Created:", response.data);
+      return response.data; // Return the response data
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      throw error; // Re-throw the error for the caller to handle
+    }
+  };
+
+  // Call createCustomer and return its result
+  return createCustomer();
+};
