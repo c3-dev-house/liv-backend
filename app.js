@@ -8,6 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.send('Something is working');
+});
+
 app.use('/api', routes);
 
 //app.use(errorMiddleware); 

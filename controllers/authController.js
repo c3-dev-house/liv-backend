@@ -97,9 +97,10 @@ export const resetPassword = async (req, res, next) => {
   }
 };
 
+//add email. 
 export const forgotPassword = async (req, res, next) => {
   // console.log('forgotPassword reached');
-  const { username, newPassword } = req.body;
+  const { username, email, newPassword } = req.body;
   // console.log('username: ', username);
   // console.log('newPassword: ', newPassword);
 
@@ -109,7 +110,7 @@ export const forgotPassword = async (req, res, next) => {
 
     setSalesforceConnection(authenticateLoginSalesforceResponse.accessToken, authenticateLoginSalesforceResponse.instanceUrl);
 
-    const user = await isUserInSalesforce(username);
+    const user = await isUserInSalesforce(username, email);
     // console.log('user:', user);
 
     if (!user) {
@@ -119,7 +120,7 @@ export const forgotPassword = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
     const updateResponse = await updateSalesforcePassword(user.Id, hashedPassword);
-    // console.log('updateResponse:', updateResponse);
+    console.log('updateResponse:', updateResponse);
 
     // Automatically log in the user with the new password
     const loginResponse = await authenticateUser(username, newPassword);

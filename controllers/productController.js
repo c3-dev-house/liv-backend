@@ -64,7 +64,7 @@ export const getVendorAndCategoryProducts = async (req, res, next) => {
 //fetches products belonging to user from salesforce
 export const getUserOwnedProducts = async (req, res, next) => {
   const { customerId } = req.params;
-  console.log(req);
+  //console.log(req);
 
   if (!customerId) {
     return res.status(400).json({ error: 'Beneficiary ID is required' });
