@@ -73,14 +73,17 @@ const verifyCredentials = async (username, password) => {
 
 const authenticateSalesforce = async () => {
   // Get the directory path of the current module file
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
+  //const __filename = fileURLToPath(import.meta.url);
+  //const __dirname = dirname(__filename);
+  console.log('in auth salesforce');
 
   // Construct the path to your private key file
-  const privateKeyPath = path.resolve(__dirname, "../private.key");
+  //const privateKeyPath = path.resolve(__dirname, "../private.key");
+  const base64EncodedPrivateKey = process.env.PRIVATE_KEY;
+  const privateKey = Buffer.from(base64EncodedPrivateKey, 'base64').toString('utf8');
 
   try {
-    const privateKey = fs.readFileSync(privateKeyPath, "utf8");
+    //const privateKey = fs.readFileSync(privateKeyPath, "utf8"); //used filepath.
 
     const payload = {
       iss: salesforce.clientId,
@@ -247,7 +250,7 @@ const getAllUserFromSalesforce = async () => {
   };
 
 // Function to check if a user exists in Salesforce by username - used for forget password controller
-const isUserInSalesforce = async (username) => {
+const isUserInSalesforce = async (username, email) => {
   console.log("isUserInSalesforce salesforce service triggered");
   if (!conn || !conn.accessToken) {
     const authenticateLoginSalesforceResponse =
@@ -258,7 +261,7 @@ const isUserInSalesforce = async (username) => {
     );
   }
   try {
-    const query = `SELECT Id, Username__c FROM Beneficiary__c WHERE Username__c = '${username}'`;
+    const query = `SELECT Id, Username__c, Email__c FROM Beneficiary__c WHERE Username__c = '${username}' AND Email__c ='${email}'`;
     const response = await salesforceRequest(
       "GET",
       `/services/data/v50.0/query?q=${encodeURIComponent(query)}`
@@ -344,8 +347,8 @@ const getClothingBundleId = async (productId) => {
   }
   const query = `SELECT Id, Name, Shopify_Product_Id__c FROM Clothing_Bundles__c WHERE Shopify_Product_Id__c = '${productId}'`;
   const records = await conn.query(query);
-  console.log("clothing bundles");
-  console.log(records);
+  //console.log("clothing bundles");
+  //console.log(records);
   return records.records.map(record => record.Id);
 };
 
@@ -356,8 +359,8 @@ const getProductItems = async (bundleId) => {
   }
   const query = `SELECT Id, Name, Quantity__c, Description__c, Sales_Price__c, CreatedDate, Clothing_Bundles_Id__c,Shopify_Product_Id__c  FROM Clothing_Items__c WHERE Shopify_Product_Id__c = '${bundleId}'`;
   const records = await conn.query(query);
-  console.log("records");
-  console.log(records);
+  //console.log("records");
+  //console.log(records);
   return records.records;
 };
 
