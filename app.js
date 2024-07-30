@@ -5,7 +5,12 @@ import routes from './routes/index.js';
 //const errorMiddleware = require('./middleware/errorMiddleware');
 
 const app = express();
-app.use(cors());
+const corsOptions = {
+  origin: ['http://127.0.0.1:5173', 'https://umthombomarketplace.co.za/'],
+  credentials: true, // for allowing credentials (cookies, authorization headers)
+};
+app.use(cors(corsOptions));
+//app.use(cors());
 app.use(express.json());
 
 app.get('/', (req, res) => {

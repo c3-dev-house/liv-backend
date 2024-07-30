@@ -30,6 +30,7 @@ const authenticateLoginSalesforce = async () => {
           username: salesforce.username,
           password: salesforce.password + salesforce.securityToken, // Salesforce password concatenated with security token
         },
+        timeout: 5000
       }
     );
 
