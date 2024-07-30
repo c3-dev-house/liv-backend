@@ -70,18 +70,23 @@ export const getBeneficiaryProducts = async (customerId) => {
     });
     console.log("transformedSales:", transformedSales);
 
-    const productsArray = (transformedSales || [])
-      .flatMap(order =>
-        order.products.map(product => ({
+    const productsPromises = (transformedSales || []).flatMap(order =>
+      order.products.map(async product => {
+        const productDetails = await getProductDetailsById(product.id);
+        return {
           id: product.id,
           date: order.date,
           time: order.time,
           title: product.title,
           price: product.price,
-          location:order.location
-        }))
-      );
+          location: order.location,
+          body_html: productDetails.body_html 
+        };
+      })
+    );
 
+    const productsArray = await Promise.all(productsPromises);
+    console.log("productsArray:", productsArray);
     return productsArray;
 
   } catch (error) {
@@ -323,4 +328,22 @@ export const registerApplicant = async (formData) => {
 
   // Call createCustomer and return its result
   return createCustomer();
+};
+
+export const getProductDetailsById = async (productId) => {
+  try {
+    const response = await axios.get(
+      `https://${shopify.storeUrl}/admin/api/2024-04/products/${productId}.json`,
+      {
+        headers: shopifyHeaders,
+        params: {
+          fields: 'id,title,body_html',
+        },
+      }
+    );
+    return response.data.product;
+  } catch (error) {
+    console.error('Error fetching product details:', error.message);
+    throw error;
+  }
 };
