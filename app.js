@@ -6,7 +6,7 @@ import routes from './routes/index.js';
 
 const app = express();
 const corsOptions = {
-  origin: ['http://127.0.0.1:5173', 'https://umthombomarketplace.co.za/'],
+  origin: ['http://127.0.0.1:5173', 'https://umthombomarketplace.co.za'],
   credentials: true, // for allowing credentials (cookies, authorization headers)
 };
 app.use(cors(corsOptions));
