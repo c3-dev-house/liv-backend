@@ -6,14 +6,14 @@ import routes from './routes/index.js';
 
 const app = express();
 const corsOptions = {
-  origin: ['http://127.0.0.1:5173', 'https://uat.umthombomarketplace.co.za'],
+  origin: ['http://127.0.0.1:5173', 'https://uat.d3jhtng4dfyk5v.amplifyapp.com'],
   credentials: true, // for allowing credentials (cookies, authorization headers)
 };
 app.use(cors(corsOptions));
 //app.use(cors());
 app.options('*', cors(corsOptions));
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://uat.umthombomarketplace.co.za");
+  res.header("Access-Control-Allow-Origin", "https://uat.d3jhtng4dfyk5v.amplifyapp.com");
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
