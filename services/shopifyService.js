@@ -261,6 +261,7 @@ export const getOrdersByCustomerAndDateRange = async (customerId, startDate, end
       },
     }
   );
+  console.log("getOrdersByCustomerAndDateRange response", response.data.orders);
   return response.data.orders;
 };
 
