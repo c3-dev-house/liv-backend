@@ -71,7 +71,7 @@ export const createOrder = async (req, res, next) => {
     // console.log("before draft order response");
     // Make a request to Shopify to create the draft order
     const draftOrderResponse = await createDraftOrder(draftOrderData);
-   
+    console.log("draftOrderResponse:", draftOrderResponse.draft_order);
     // Complete the draft order
     const completeOrderResponse = await completeDraftOrder(
       draftOrderResponse.draft_order.id
@@ -91,7 +91,7 @@ export const createOrder = async (req, res, next) => {
    
 
     const fulfillment = await createFulfillment(fulfillmentOrderId);
-    // console.log('fulfillment: ', fulfillment);
+    console.log('fulfillment: ', fulfillment);
 
 
     //todo update product status to inactive (for both variants too if required) - done - works
@@ -105,6 +105,7 @@ export const createOrder = async (req, res, next) => {
       success: true,
       order: completeOrderResponse.draft_order,
     });
+
   } catch (error) {
     next(error);
   }
