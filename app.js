@@ -6,12 +6,13 @@ import routes from './routes/index.js';
 
 const app = express();
 const corsOptions = {
-  origin: ['https://umthombomarketplace.co.za'],
+  origin: ['https://umthombomarketplace.co.za'], //add https://uat.d3jhtng4dfyk5v.amplifyapp.com - for uat, http://127.0.0.1:5173 - for dev, https://umthombomarketplace.co.za - prod
   credentials: true, // for allowing credentials (cookies, authorization headers)
 };
 app.use(cors(corsOptions));
 //app.use(cors());
 app.options('*', cors(corsOptions));
+/*
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "https://umthombomarketplace.co.za");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -19,6 +20,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   next();
 });
+*/
 app.use(express.json());
 
 app.get('/', (req, res) => {

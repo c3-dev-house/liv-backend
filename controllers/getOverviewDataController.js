@@ -47,11 +47,11 @@ export const getBeneficiarySales = async (req, res, next) => {
     });
 
     res.json({
-      totalProfit,
-      costOfGoods,
-      purchaseCount,
-      reservedCount,
-      totalSales,
+      totalProfit: totalProfit ? totalProfit: 0,
+      costOfGoods: costOfGoods ? costOfGoods: 0,
+      purchaseCount: purchaseCount ? purchaseCount: 0,
+      reservedCount: reservedCount ? reservedCount: 0,
+      totalSales: totalSales ? totalSales: 0,
       totalQuantity
     });
   } catch (error) {
