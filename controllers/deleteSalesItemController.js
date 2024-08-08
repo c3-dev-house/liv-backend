@@ -24,7 +24,7 @@ export const deleteSalesItem = async (req, res, next) => {
 
     // Update the isDeleted__c field to true and set Sales_Price__c to 0
     const updateEndpoint = `/services/data/v52.0/sobjects/Clothing_Items__c/${recordId}`;
-    const updatePayload = { isDeleted__c: true, Sales_Price__c: 0 };
+    const updatePayload = { isDeleted__c: true, Sales_Price__c: 0,Quantity__c:0 };
     console.log(`Marking item with ID: ${recordId} as deleted and setting Sales_Price__c to 0`);
 
     await salesforceRequest('PATCH', updateEndpoint, updatePayload);
